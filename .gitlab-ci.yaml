@@ -1,0 +1,86 @@
+# This file is a template, and might need editing before it works on your project.
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+include:
+  - project: 'next-db/devops/gitlab-ci-templates'
+    ref: v2.0.0
+    file:
+      - 'main.yml'
+      - 'bump-version.yml'
+      - 'build-template.yml'
+      - 'deploy-template.yml'
+      - 'test-template-pipline/Code-Quality.gitlab-ci.yml'
+      - 'test-template-pipline/Container-Scanning.gitlab-ci.yml'
+      - 'test-template-pipline/Dependency-Scanning.gitlab-ci.yml'
+      - 'test-template-pipline/License-Scanning.gitlab-ci.yml'
+      - 'test-template-pipline/SAST.gitlab-ci.yml'
+      - 'test-template-pipline/Secret-Detection.gitlab-ci.yml'
+
+stages:
+  - bump_version
+  - build
+  - test
+  - deploy
+
+build_dev_container:
+  variables:
+    BUILD_ARGS: ""
+
+build_staging_container:
+  variables:
+    BUILD_ARGS: ""
+
+build_prod_container:
+  variables:
+    BUILD_ARGS: ""
+
+deploy_dev:
+  variables:
+    HELM_ARGS: "-f ./helm/mobile-validator-register-dev-values.yaml  --set deployment.imagePullSecrets='gitlab-cr' "
+    NAMESPACE: "transaction-gateway-be"
+  before_script:
+    - DOCKER_IMAGE_RELEASE=$CI_REGISTRY_IMAGE:$(cat VERSION.txt)
+    - |
+      function config_kube() {
+        mkdir ~/.kube
+        cp $KUBECONFIG_DEPLOY_NEXTCLAN_DEV ~/.kube/config
+      }
+  script:
+    - config_kube
+    - helm upgrade $HELM_ARGS --set deployment.image=$DOCKER_IMAGE_RELEASE --install $CI_PROJECT_NAME -n $NAMESPACE ./helm
+    - kubectl get po -n $NAMESPACE
+  tags:
+    - nextclan-develop
+
+deploy_staging:
+  variables:
+    HELM_ARGS: "--set deployment.resources.requests.cpu=200m,deployment.replicas=1,hpa.minReplicas=1,deployment.imagePullSecrets='gitlab-cr'"
+  before_script:
+    - DOCKER_IMAGE_RELEASE=$CI_REGISTRY_IMAGE:$(cat VERSION.txt)
+    - |
+      function config_kube() {
+        mkdir ~/.kube
+        cp $KUBECONFIG_DEPLOY_STG ~/.kube/config
+      }
+  script:
+    - config_kube
+    - helm upgrade $HELM_ARGS --set deployment.image=$DOCKER_IMAGE_RELEASE --install $CI_PROJECT_NAME ./helm
+    - kubectl get po
+  tags:
+    - central-runner
+
+deploy_prod: 
+  variables:
+    HELM_ARGS: "--set deployment.imagePullSecrets='gitlab-cr'"   
+  before_script:
+    - DOCKER_IMAGE_RELEASE=$CI_REGISTRY_IMAGE:$(cat VERSION.txt)
+    - |
+      function config_kube() {
+        mkdir ~/.kube
+        cp $KUBECONFIG_DEPLOY_PROD ~/.kube/config
+      }
+  script:
+    - config_kube
+    - helm upgrade $HELM_ARGS --set deployment.image=$DOCKER_IMAGE_RELEASE --install $CI_PROJECT_NAME ./helm
+    - kubectl get po
+  tags:
+    - digitalco-production

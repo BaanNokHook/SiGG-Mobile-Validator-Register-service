@@ -1,0 +1,18 @@
+{{- if .Values.gateway.enable }}
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: {{ include "helm.release.name" . }}-gateway
+spec:
+  selector:
+    {{- toYaml .Values.gateway.selector | nindent 4 }}
+  servers:
+  - hosts:
+  {{- range .Values.gateway.hosts}}
+    - {{ . | quote }}
+  {{- end}}
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+{{- end }}

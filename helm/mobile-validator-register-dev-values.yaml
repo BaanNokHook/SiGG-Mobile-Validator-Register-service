@@ -1,0 +1,131 @@
+deployment:
+  labels:
+    app: mobile-validator-register-service
+    tier: backend
+  image: ""
+  imagePullSecrets: "gitlab-cr"
+  containerPort: 8005
+  env:
+    - name: APP_NAME
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: APP_NAME
+    - name: APP_VERSION
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: APP_VERSION
+    - name: HTTP_PORT
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: HTTP_PORT
+    - name: LOG_LEVEL
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: LOG_LEVEL
+    - name: MONGO_URI
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: MONGO_URI
+    - name: MONGO_URI
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: MONGO_URI
+    - name: MONGO_DB
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: MONGO_DB
+    - name: MONGO_DEVICE_COLLECTION_NAME
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: MONGO_DEVICE_COLLECTION_NAME
+    - name: REDIS_ADDR
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: REDIS_ADDR
+    - name: REDIS_PASSWORD
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: REDIS_PASSWORD
+    - name: REDIS_DEVICE_DB
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: REDIS_DEVICE_DB
+    - name: PUSHER_BEAM_INSTANCE_ID
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: PUSHER_BEAM_INSTANCE_ID
+    - name: PUSHER_BEAM_SECRET_KEY
+      valueFrom:
+        configMapKeyRef:
+          name: mobile-validator-register-dev-config
+          key: PUSHER_BEAM_SECRET_KEY
+
+  resources:
+  requests:
+    memory: "128Mi"
+    cpu: "0.5"
+  limits:
+    memory: "512Mi"
+    cpu: "1"
+  volumeMounts: []
+  volumes: []
+  readinessPath: /healthz
+  livenessPath: /healthz
+
+pvc:
+  enable: false
+  # resources:
+  #   requests:
+  #     storage: 10Gi
+  # storageClassName: nfs-client
+
+configMaps:
+  []
+  # - name: name-of-config
+  #   data:
+  #     somefile.json: |
+  #       {
+  #         name: test,
+  #         otherkey: othervalue
+  #       }
+
+## Config-file (optional)
+## Setfile from helm option command
+## Support only one file config
+configmapFile:
+  enable: false
+  # name: config-file
+  # namefile: "config.json"
+  # data: ""
+
+hpa:
+  enable: false
+  minReplicas: 1
+  maxReplicas: 3
+
+gateway:
+  enable: true
+  selector:
+    gateway: c01-ingressgateway
+  hosts:
+    - "*"
+
+virtualService:
+  enable: true
+  allowOrigins:
+    - "*"
+  uriPrefix: /api/v1/devices
+  rewriteUri: true
+  uriRewrite: /v1/devices

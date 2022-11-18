@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm.release.name" . }}
+  labels:
+    default-app: {{ include "helm.release.name" . }}
+  {{- if .Values.deployment.labels }}
+    {{- toYaml .Values.deployment.labels | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      default-app: {{ include "helm.release.name" . }}
+    {{- if .Values.deployment.labels }}
+      {{- toYaml .Values.deployment.labels | nindent 6 }}
+    {{- end }}      
+  template:
+    metadata:
+      labels:
+        default-app: {{ include "helm.release.name" . }}
+      {{- if .Values.deployment.labels }}
+        {{- toYaml .Values.deployment.labels | nindent 8 }}
+      {{- end }}
+    spec:
+      containers:
+      - name: {{ include "helm.release.name" . }}
+        image: {{ .Values.deployment.image }}
+      {{- if .Values.deployment.env }}
+        env:
+        {{- toYaml .Values.deployment.env | nindent 8 }}
+      {{- end }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: {{ .Values.deployment.containerPort }}
+      {{- if .Values.deployment.volumeMounts }}
+        volumeMounts:
+          {{- toYaml .Values.deployment.volumeMounts | nindent 8 }}
+      {{- end }}       
+        readinessProbe:
+          tcpSocket:
+            port: {{ .Values.deployment.containerPort }}
+          initialDelaySeconds: 10
+          periodSeconds: 20
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.deployment.containerPort }}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          {{- toYaml .Values.deployment.resources | nindent 10 }}
+    {{- if .Values.deployment.imagePullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.deployment.imagePullSecrets }}
+    {{- end }}
+    {{- if .Values.deployment.volumes }}
+      volumes:
+      {{- toYaml .Values.deployment.volumes | nindent 6 }}
+    {{- end }}

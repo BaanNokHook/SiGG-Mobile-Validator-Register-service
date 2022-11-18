@@ -1,0 +1,54 @@
+{{- if .Values.virtualService.enable }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ include "helm.release.name" . }}-virtualservice
+spec:
+  gateways:
+  - {{ include "helm.release.name" . }}-gateway
+  hosts:
+  {{- range .Values.gateway.hosts}}
+    - {{ . | quote }}
+  {{- end}}
+  http:
+  - corsPolicy:
+      allowCredentials: true
+      allowHeaders:
+      - Origin
+      - X-Requested-With
+      - Content-Type
+      - Accept
+      - Authorization
+      allowMethods:
+      - GET
+      - POST
+      - PATCH
+      - PUT
+      - DELETE
+    {{- if .Values.virtualService.allowOrigins}}
+      allowOrigins:
+      {{- range .Values.virtualService.allowOrigins }}
+        - {{- toYaml . | indent 1 }}
+      {{- end }}
+    {{- end }}
+    match:
+    - uri:
+        prefix: {{ .Values.virtualService.uriPrefix }}
+        {{- if .Values.virtualService.rewriteUri }}
+    rewrite:
+      uri: {{ .Values.virtualService.uriRewrite }}
+    {{- end }}
+    route:
+    - destination:
+        host: mobile-validator-register-service
+        port:
+          number: {{ .Values.deployment.containerPort }}
+      headers:
+        response:
+          add:
+            Content-Security-Policy: default-src 'self'
+            Strict-Transport-Security: max-age=63072000; includeSubdomains; preload
+            X-Content-Type-Options: nosniff
+            X-XSS-Protection: 1; mode=block
+            x-frame-options: sameorigin
+{{- end }}

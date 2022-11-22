@@ -1,26 +1,43 @@
-// package main
-
-// import (
-// 	"log"
-// 	"nextclan/validator-register/mobile-validator-register-service/config"
-// 	"nextclan/validator-register/mobile-validator-register-service/internal/app"
-// )
-
-// func main() {
-// 	// Configuration
-// 	cfg, err := config.NewConfig()
-// 	if err != nil {
-// 		log.Fatalf("Config error: %s", err)
-// 	}
-
-// 	// Run
-// 	app.Run(cfg)
-// }
-
 package main
 
-import "fmt"
+import (
+	"github.com/nextclan/user-service-go/controller"
+	"github.com/nextclan/user-service-go/database"
+	"github.com/nextclan/user-service-go/env"
+	"github.com/nextclan/user-service-go/http"
+	"github.com/nextclan/user-service-go/service"
+)
+
+var (
+	en         env.Provider      = env.NewEnv()
+	db         database.Provider = database.NewPG()
+	mainRouter http.Router       = http.NewMuxRouter()
+)
 
 func main() {
-	fmt.Println("Clash")
+	initApp()
+	initRoutes()
+
+	mainRouter.Serve()
+}
+
+func initApp() {
+	// Init environment provider
+	en.Init()
+	// Connect database
+	db.Connect(en)
+	// Init service
+	service.NewUserService()
+}
+
+func initRoutes() {
+	mainRouter.Get("/health", controller.Health)
+
+	userRouter := mainRouter.RegisterSubRoute("/user")
+	userRouter.Post("/signup", controller.Signup)
+	userRouter.Post("/login", controller.Login)
+	userRouter.Get("/{id}", controller.GetUserById)
+
+	orgRouter := mainRouter.RegisterSubRoute("/org")
+	orgRouter.Get("/{id}", controller.GetOrgById)
 }

@@ -1,0 +1,41 @@
+// Server health check
+# GET http://localhost:4000/health
+GET http://45.77.39.29:3001/v1/status
+
+###
+// User signup
+# POST http://localhost:4000/user/signup
+POST http://45.77.39.29:3001/v1/status
+Content-Type: "application/json"
+
+{
+    "user": {
+        "name": "test6",
+        "email": "test6",
+        "password": "test",
+        "orgId": "b0cec438-0af6-4fa1-b1fb-db0e2f7e1bca"
+    },
+    "orgName": "test"
+}
+
+###
+// User login
+# POST http://localhost:4000/user/login
+POST http://45.77.39.29:3001/v1/status
+Content-Type: "application/json"
+
+{
+    "name": "test6",
+    "password": "test"
+}
+
+###
+// GetUserById
+# GET http://localhost:4000/user/4df5f8f1-5cf0-41f8-a680-b841f17dc963
+
+GET http://45.77.39.29:3001/v1/status
+
+###
+// GetOrgById
+# GET http://localhost:4000/org/b0cec438-0af6-4fa1-b1fb-db0e2f7e1bca
+GET http://45.77.39.29:3001/v1/status
